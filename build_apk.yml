@@ -1,0 +1,71 @@
+name: Build APK
+
+# This workflow needs NOTHING pre-installed on your machine — not even
+# Flutter. It generates the Android platform folder fresh on GitHub's own
+# servers (guaranteed to match whatever Flutter version is current), patches
+# in the permissions/settings this app needs, then builds a release APK.
+#
+# After a push: Actions tab -> this run -> scroll down to "Artifacts" ->
+# download "life-os-release-apk".
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # --- Generate the android/ platform folder fresh ------------------
+      # We do NOT run `flutter create` directly on top of the checked-out
+      # repo (it could overwrite pubspec.yaml/lib/main.dart). Instead we
+      # generate a brand-new throwaway project purely to harvest its
+      # android/ folder, matching whatever Flutter version this runner has.
+      - name: Generate a fresh Android platform scaffold
+        run: |
+          flutter create --platforms=android --org com.lifeos.app --project-name life_os /tmp/scaffold
+          cp -r /tmp/scaffold/android ./android
+          rm -rf /tmp/scaffold
+
+      - name: Apply required AndroidManifest.xml permissions
+        run: python3 ci_scripts/patch_manifest.py
+
+      - name: Apply required Gradle settings
+        run: python3 ci_scripts/patch_gradle.py
+
+      - name: Copy built-in alarm sound files into Android resources
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          cp android_setup/raw_sounds/*.wav android/app/src/main/res/raw/
+
+      # --- Normal Flutter build ------------------------------------------
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis (non-blocking)
+        run: flutter analyze || true
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: life-os-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

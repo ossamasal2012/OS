@@ -1,0 +1,84 @@
+name: life_os
+description: "Life OS — نظام تشغيل شخصي للحياة والدراسة والإنتاجية. يعمل بالكامل دون إنترنت، بدون أي ذكاء اصطناعي أو خدمات مدفوعة."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # -- State management --------------------------------------------------
+  # Riverpod 3.x, using the modern Notifier API (not the legacy
+  # StateNotifier, and NOT the code-generation flavor — see README for why).
+  flutter_riverpod: ^3.0.0
+
+  # -- Local storage (100% on-device, no network) --------------------------
+  # Original `hive`/`isar` are no longer maintained. hive_ce is the actively
+  # maintained community continuation with the same simple API. We use
+  # hand-written TypeAdapters (no build_runner/codegen) — see README.
+  hive_ce: ^2.11.0
+  hive_ce_flutter: ^2.3.0
+  path_provider: ^2.1.0
+
+  # -- Notifications / alarms / timers -------------------------------------
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.9.4
+  flutter_timezone: ^2.1.0
+
+  # -- Alarm ringing / ringtone preview audio -------------------------------
+  audioplayers: ^6.1.0
+
+  # -- Theming / Material You -------------------------------------------------
+  # NOTE: we deliberately do NOT use the `google_fonts` package. By default it
+  # downloads font files from Google's servers the first time they're used,
+  # which would silently break the "100% offline, no cloud service" promise
+  # of this app. Instead, the Cairo font (SIL OFL license, free to bundle) is
+  # shipped as a local asset below and declared under flutter/fonts/.
+  dynamic_color: ^1.7.0
+
+  # -- Utilities -------------------------------------------------------------
+  uuid: ^4.4.0
+  intl: any # version is pinned by flutter_localizations itself
+  package_info_plus: ^8.0.0
+
+  # -- Notes: share / export -------------------------------------------------
+  share_plus: ^10.0.0
+  pdf: ^3.11.1
+  printing: ^5.13.1
+  file_picker: ^8.1.2
+
+  # -- Permissions (notifications, exact alarms) ------------------------------
+  permission_handler: ^11.3.1
+
+  # -- Statistics charts -------------------------------------------------------
+  fl_chart: ^0.69.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true # enables flutter gen-l10n via l10n.yaml
+
+  assets:
+    - assets/fonts/Cairo-OFL-LICENSE.txt
+    - assets/sounds/tone_classic_beep.wav
+    - assets/sounds/tone_gentle_chime.wav
+    - assets/sounds/tone_digital_alarm.wav
+    - assets/sounds/tone_soft_bell.wav
+
+  fonts:
+    # Cairo is a single *variable* font (weight axis 200–1000 + slant), so one
+    # file gives every weight from ExtraLight to Black — no need to list each
+    # weight separately. Fully offline, bundled straight into the APK.
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Variable.ttf
